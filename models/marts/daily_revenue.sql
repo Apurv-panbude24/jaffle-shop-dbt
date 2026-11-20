@@ -12,16 +12,28 @@
     payments), and delete+insert on order_date keeps the table idempotent.
 -#}
 
-with orders as (
+with
+{% if is_incremental() %}
+watermark as (
 
-    select * from {{ ref('orders') }}
-    where status not in ('returned', 'return_pending')
+    select
+        coalesce(max(order_date), '1900-01-01'::date)
+        - interval '{{ var("revenue_lookback_days") }} days' as cutoff
+    from {{ this }}
 
+),
+
+{% endif %}
+orders as (
+
+    select o.*
+    from {{ ref('orders') }} as o
     {% if is_incremental() %}
-      and order_date >= (
-          select coalesce(max(order_date), '1900-01-01'::date) - interval '{{ var("revenue_lookback_days") }} days'
-          from {{ this }}
-      )
+    cross join watermark as w
+    {% endif %}
+    where o.status not in ('returned', 'return_pending')
+    {% if is_incremental() %}
+        and o.order_date >= w.cutoff
     {% endif %}
 
 )
