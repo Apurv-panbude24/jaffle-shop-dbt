@@ -1,0 +1,21 @@
+unit_tests:
+  - name: test_customer_segments_boundaries
+    description: Segment thresholds are inclusive at the lower bound and customers with no orders are labelled separately.
+    model: customer_segments
+    overrides:
+      vars:
+        segment_high_ltv: 30
+        segment_medium_ltv: 15
+    given:
+      - input: ref('customers')
+        rows:
+          - {customer_id: 1, first_name: A, last_name: A, number_of_orders: 3, customer_lifetime_value: 30}
+          - {customer_id: 2, first_name: B, last_name: B, number_of_orders: 1, customer_lifetime_value: 15}
+          - {customer_id: 3, first_name: C, last_name: C, number_of_orders: 1, customer_lifetime_value: 14.99}
+          - {customer_id: 4, first_name: D, last_name: D, number_of_orders: null, customer_lifetime_value: null}
+    expect:
+      rows:
+        - {customer_id: 1, value_segment: high_value, is_repeat_customer: true, customer_lifetime_value: 30}
+        - {customer_id: 2, value_segment: medium_value, is_repeat_customer: false, customer_lifetime_value: 15}
+        - {customer_id: 3, value_segment: low_value, is_repeat_customer: false, customer_lifetime_value: 14.99}
+        - {customer_id: 4, value_segment: no_orders, is_repeat_customer: false, customer_lifetime_value: 0}

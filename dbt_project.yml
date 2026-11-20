@@ -19,6 +19,11 @@ clean-targets:
 
 require-dbt-version: [">=1.11.0", "<2.0.0"]
 
+vars:
+  segment_high_ltv: 30
+  segment_medium_ltv: 15
+  revenue_lookback_days: 3
+
 seeds: 
   +docs:
     node_color: '#cd7f32'
@@ -26,6 +31,9 @@ seeds:
 models:
   jaffle_shop:
     +materialized: table
+    marts:
+      +docs:
+        node_color: 'gold'
     staging:
       +materialized: view
       +docs:
