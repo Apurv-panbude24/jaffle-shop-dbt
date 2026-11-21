@@ -12,3 +12,8 @@ venv/
 env/
 **/*.duckdb
 **/*.duckdb.wal
+
+# Python bytecode and test caches
+__pycache__/
+*.pyc
+.pytest_cache/
