@@ -22,7 +22,7 @@ require-dbt-version: [">=1.11.0", "<2.0.0"]
 vars:
   segment_high_ltv: 30
   segment_medium_ltv: 15
-  revenue_lookback_days: 3
+  revenue_lookback_offset_days: -3   # recompute the last 3 days on each incremental run
 
 seeds:
   +enabled: "{{ target.name != 'prod' }}"

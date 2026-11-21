@@ -19,7 +19,7 @@ watermark as (
     select
         {{ dbt.dateadd(
             'day',
-            -var('revenue_lookback_days'),
+            var('revenue_lookback_offset_days'),
             "coalesce(max(order_date), cast('1900-01-01' as date))"
         ) }} as cutoff
     from {{ this }}
