@@ -9,6 +9,7 @@ GitHub raw CSVs -> Data Factory (pl_ingest_raw) -> ADLS Gen2 (raw container)
 |---|---|---|
 | Landing zone | ADLS Gen2 storage account, container `raw` | Cheap, durable copy of the source files |
 | Ingestion | Data Factory pipeline `pl_ingest_raw` (ForEach table: CSV to ADLS, then ADLS to SQL) | Config-driven by the `tables` parameter; daily trigger `tr_daily` |
+| Generic uploads | Pipeline `pl_ingest_upload` (one table per run, parameter `tableName`), used by the ingest UI | Any CSV the UI sends lands in `uploads.<table>` |
 | Warehouse | Azure SQL Database, free serverless offer, auto-pause | Zero cost at this size; dbt runs on top |
 | Access | Data Factory uses its managed identity for storage; no storage keys | Nothing to leak or rotate |
 | Cost guard | Monthly budget with email alerts, `teardown.sh` | Nothing runs unnoticed |
