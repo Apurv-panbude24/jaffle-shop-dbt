@@ -1,3 +1,17 @@
 [sqlfluff]
-
 dialect = duckdb
+max_line_length = 120
+# LT02 (indentation) is noisy around Jinja control blocks; keep the rest on.
+exclude_rules = LT02
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.types]
+extended_capitalisation_policy = lower

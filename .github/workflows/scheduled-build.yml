@@ -1,0 +1,35 @@
+name: Scheduled build
+
+# Rebuilds the whole project every day and publishes a run summary, so a break
+# in the seeds, models or tests surfaces without anyone pushing code.
+on:
+  schedule:
+    - cron: "0 6 * * *"   # 06:00 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  nightly:
+    name: Nightly dbt build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install dependencies
+        run: uv sync --frozen
+      - name: dbt build
+        run: uv run dbt build
+      - name: Run summary
+        if: always()
+        run: uv run python scripts/summarize_run.py | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Upload run artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-run-results
+          path: |
+            target/run_results.json
+            target/manifest.json
+          retention-days: 14

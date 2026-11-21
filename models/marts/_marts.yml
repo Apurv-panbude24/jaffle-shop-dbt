@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: customer_segments
+    description: Customers bucketed by lifetime value, with a repeat-customer flag.
+    columns:
+      - name: customer_id
+        data_tests:
+          - unique
+          - not_null
+      - name: customer_lifetime_value
+        data_tests:
+          - non_negative
+      - name: value_segment
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['no_orders', 'low_value', 'medium_value', 'high_value']
+
+  - name: daily_revenue
+    description: Revenue per day excluding returned orders. Incremental with a lookback window.
+    columns:
+      - name: order_date
+        data_tests:
+          - unique
+          - not_null
+      - name: total_revenue
+        data_tests:
+          - non_negative
+      - name: average_order_value
+        data_tests:
+          - non_negative
+
+  - name: payment_method_mix
+    description: Total amount and share of revenue per payment method.
+    columns:
+      - name: payment_method
+        data_tests:
+          - unique
+          - not_null
+      - name: share_of_revenue
+        description: Fractions across all methods sum to 1.
+        data_tests:
+          - non_negative
