@@ -31,6 +31,9 @@ param budgetStartDate string = utcNow('yyyy-MM-01')
 @description('Your public IP, so you can reach the SQL server from your laptop (leave empty to skip).')
 param clientIp string = ''
 
+@description('Object ID of the person who uploads files from the ingest UI (az ad signed-in-user show --query id). Leave empty to skip.')
+param uploaderObjectId string = ''
+
 @description('Public repo + branch the seed CSVs are read from.')
 param seedBaseUrl string = 'https://raw.githubusercontent.com/Apurv-panbude24/jaffle-shop-dbt/main/seeds/'
 
@@ -135,6 +138,17 @@ resource factoryCanWriteStorage 'Microsoft.Authorization/roleAssignments@2022-04
   properties: {
     principalId: factory.identity.principalId
     principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataContributor)
+  }
+}
+
+// The person using the ingest UI may upload files to the storage account (keyless: Entra ID login).
+resource uploaderCanWriteStorage 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(uploaderObjectId)) {
+  name: guid(storage.id, uploaderObjectId, storageBlobDataContributor)
+  scope: storage
+  properties: {
+    principalId: uploaderObjectId
+    principalType: 'User'
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataContributor)
   }
 }
@@ -307,6 +321,88 @@ resource pipeline 'Microsoft.DataFactory/factories/pipelines@2018-06-01' = {
               }
             }
           ]
+        }
+      }
+    ]
+  }
+}
+
+// ---------- Generic upload path (used by the ingest UI) ----------
+// The UI uploads <table>.csv to raw/uploads/ and creates uploads.<table> in Azure SQL with
+// the right column types; this pipeline then loads it. One pipeline serves any table.
+resource dsAdlsUploadCsv 'Microsoft.DataFactory/factories/datasets@2018-06-01' = {
+  parent: factory
+  name: 'ds_adls_upload_csv'
+  properties: {
+    type: 'DelimitedText'
+    linkedServiceName: { referenceName: lsAdls.name, type: 'LinkedServiceReference' }
+    parameters: { fileName: { type: 'String' } }
+    typeProperties: {
+      location: {
+        type: 'AzureBlobFSLocation'
+        fileSystem: 'raw'
+        folderPath: 'uploads'
+        fileName: { value: '@dataset().fileName', type: 'Expression' }
+      }
+      columnDelimiter: ','
+      firstRowAsHeader: true
+      quoteChar: '"'
+      escapeChar: '"' // DuckDB (RFC 4180) escapes a quote by doubling it; ADF defaults to backslash
+    }
+  }
+}
+
+resource dsSqlUpload 'Microsoft.DataFactory/factories/datasets@2018-06-01' = {
+  parent: factory
+  name: 'ds_sql_upload'
+  properties: {
+    type: 'AzureSqlTable'
+    linkedServiceName: { referenceName: lsSql.name, type: 'LinkedServiceReference' }
+    parameters: { tableName: { type: 'String' } }
+    typeProperties: {
+      schema: 'uploads'
+      table: { value: '@dataset().tableName', type: 'Expression' }
+    }
+  }
+}
+
+resource pipelineUpload 'Microsoft.DataFactory/factories/pipelines@2018-06-01' = {
+  parent: factory
+  name: 'pl_ingest_upload'
+  dependsOn: [ dsAdlsUploadCsv, dsSqlUpload, factoryCanWriteStorage, rawContainer ]
+  properties: {
+    parameters: {
+      tableName: { type: 'String' }
+    }
+    activities: [
+      {
+        name: 'CopyUploadToSql'
+        type: 'Copy'
+        inputs: [
+          {
+            referenceName: 'ds_adls_upload_csv'
+            type: 'DatasetReference'
+            parameters: { fileName: { value: '@concat(pipeline().parameters.tableName, \'.csv\')', type: 'Expression' } }
+          }
+        ]
+        outputs: [
+          {
+            referenceName: 'ds_sql_upload'
+            type: 'DatasetReference'
+            parameters: { tableName: { value: '@pipeline().parameters.tableName', type: 'Expression' } }
+          }
+        ]
+        typeProperties: {
+          source: {
+            type: 'DelimitedTextSource'
+            storeSettings: { type: 'AzureBlobFSReadSettings' }
+            formatSettings: { type: 'DelimitedTextReadSettings' }
+          }
+          sink: {
+            type: 'AzureSqlSink'
+            writeBehavior: 'insert'
+            preCopyScript: { value: '@concat(\'TRUNCATE TABLE uploads.[\', pipeline().parameters.tableName, \']\')', type: 'Expression' }
+          }
         }
       }
     ]

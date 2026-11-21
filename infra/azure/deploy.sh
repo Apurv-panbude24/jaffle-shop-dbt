@@ -2,6 +2,7 @@
 # Deploys the Azure leg. Prereqs: `az login`, then:
 #   export SQL_ADMIN_PASSWORD='...'   (12+ chars, upper/lower/digit/symbol; never commit it)
 #   export ALERT_EMAIL='you@example.com'
+#   export UPLOADER_OBJECT_ID="$(az ad signed-in-user show --query id -o tsv)"   # optional: lets the ingest UI upload
 #   ./infra/azure/deploy.sh [resource-group] [location]
 set -euo pipefail
 
@@ -16,5 +17,5 @@ az group create --name "$RG" --location "$LOCATION" --output none
 az deployment group create \
   --resource-group "$RG" \
   --template-file "$(dirname "$0")/main.bicep" \
-  --parameters sqlAdminPassword="$SQL_ADMIN_PASSWORD" alertEmail="$ALERT_EMAIL" clientIp="$MY_IP" \
+  --parameters sqlAdminPassword="$SQL_ADMIN_PASSWORD" alertEmail="$ALERT_EMAIL" clientIp="$MY_IP" uploaderObjectId="${UPLOADER_OBJECT_ID:-}" \
   --query properties.outputs --output json
