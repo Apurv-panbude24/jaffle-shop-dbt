@@ -1,0 +1,4 @@
+
+# daily_revenue uses dbt.dateadd, which sqlfluff's plain Jinja templater cannot resolve
+# (it would need sqlfluff-templater-dbt). It is still built and tested by dbt on both targets.
+models/marts/daily_revenue.sql

@@ -28,7 +28,7 @@ segmented as (
             else 'low_value'
         end as value_segment,
 
-        coalesce(number_of_orders, 0) > 1 as is_repeat_customer
+        case when coalesce(number_of_orders, 0) > 1 then 1 else 0 end as is_repeat_customer
 
     from customers
 

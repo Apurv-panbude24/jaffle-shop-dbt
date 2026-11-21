@@ -1,10 +1,7 @@
 with source as (
     
-    {#-
-    Normally we would select from the table here, but we are using seeds to load
-    our data in this project
-    #}
-    select * from {{ ref('raw_payments') }}
+    {#- dev: seeds; prod: Azure landing tables (see macros/raw_table.sql) -#}
+    select * from {{ raw_table('raw_payments') }}
 
 ),
 
@@ -16,7 +13,7 @@ renamed as (
         payment_method,
 
         -- `amount` is currently stored in cents, so we convert it to dollars
-        amount / 100 as amount
+        cast(amount as decimal(18, 2)) / 100 as amount
 
     from source
 

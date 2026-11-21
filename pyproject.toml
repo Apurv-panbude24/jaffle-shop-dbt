@@ -9,4 +9,6 @@ dependencies = [
     "sqlfluff>=3",
     # Constrain chardet to avoid RequestsDependencyWarning from requests
     "chardet<6",
+    "dbt-sqlserver>=1.12.2",
+    "pyodbc>=5.5.0",
 ]
