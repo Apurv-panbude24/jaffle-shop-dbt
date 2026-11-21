@@ -25,7 +25,7 @@ totals as (
     select
         payment_method,
         sum(amount) as total_amount,
-        count(*) filter (where amount > 0) as number_of_payments
+        sum(case when amount > 0 then 1 else 0 end) as number_of_payments
     from unpivoted
     group by payment_method
 
@@ -35,6 +35,6 @@ select
     payment_method,
     total_amount,
     number_of_payments,
-    total_amount / sum(total_amount) over () as share_of_revenue
+    cast(total_amount as float) / sum(total_amount) over () as share_of_revenue
 
 from totals

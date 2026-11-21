@@ -15,7 +15,7 @@ unit_tests:
           - {customer_id: 4, first_name: D, last_name: D, number_of_orders: null, customer_lifetime_value: null}
     expect:
       rows:
-        - {customer_id: 1, value_segment: high_value, is_repeat_customer: true, customer_lifetime_value: 30}
-        - {customer_id: 2, value_segment: medium_value, is_repeat_customer: false, customer_lifetime_value: 15}
-        - {customer_id: 3, value_segment: low_value, is_repeat_customer: false, customer_lifetime_value: 14.99}
-        - {customer_id: 4, value_segment: no_orders, is_repeat_customer: false, customer_lifetime_value: 0}
+        - {customer_id: 1, value_segment: high_value, is_repeat_customer: 1, customer_lifetime_value: 30}
+        - {customer_id: 2, value_segment: medium_value, is_repeat_customer: 0, customer_lifetime_value: 15}
+        - {customer_id: 3, value_segment: low_value, is_repeat_customer: 0, customer_lifetime_value: 14.99}
+        - {customer_id: 4, value_segment: no_orders, is_repeat_customer: 0, customer_lifetime_value: 0}

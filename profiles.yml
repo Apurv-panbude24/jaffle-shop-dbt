@@ -6,3 +6,19 @@ jaffle_shop:
       type: duckdb
       path: 'jaffle_shop.duckdb'
       threads: 24
+
+    # Azure SQL Database. Needs the Microsoft ODBC Driver 18 and these env vars:
+    #   AZURE_SQL_SERVER, AZURE_SQL_PASSWORD (see infra/azure/README.md)
+    prod:
+      type: sqlserver
+      driver: 'ODBC Driver 18 for SQL Server'
+      server: "{{ env_var('AZURE_SQL_SERVER') }}"
+      port: 1433
+      database: jaffle_shop
+      schema: analytics
+      authentication: sql
+      user: jaffleadmin
+      password: "{{ env_var('AZURE_SQL_PASSWORD') }}"
+      encrypt: true
+      trust_cert: false
+      threads: 4

@@ -17,8 +17,11 @@ with
 watermark as (
 
     select
-        coalesce(max(order_date), '1900-01-01'::date)
-        - interval '{{ var("revenue_lookback_days") }} days' as cutoff
+        {{ dbt.dateadd(
+            'day',
+            -var('revenue_lookback_days'),
+            "coalesce(max(order_date), cast('1900-01-01' as date))"
+        ) }} as cutoff
     from {{ this }}
 
 ),

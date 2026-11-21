@@ -24,7 +24,8 @@ vars:
   segment_medium_ltv: 15
   revenue_lookback_days: 3
 
-seeds: 
+seeds:
+  +enabled: "{{ target.name != 'prod' }}"
   +docs:
     node_color: '#cd7f32'
 

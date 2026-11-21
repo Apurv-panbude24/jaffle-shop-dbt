@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: azure_raw
+    description: Landing tables loaded by the Azure Data Factory pipeline (prod target only).
+    schema: raw
+    tables:
+      - name: raw_customers
+      - name: raw_orders
+      - name: raw_payments
